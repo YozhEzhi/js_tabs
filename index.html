@@ -1,64 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
+  <meta charset="UTF-8">
 
-	<title>Tabs test</title>
+  <title>Tabs test</title>
 
-	<link rel="stylesheet" href="tabs.css">
+  <link rel="stylesheet" href="tabs.css">
 </head>
 <body>
-	<div class="content">
-		<ul class="tabs-list cf">
-			<li class="tabs-item active" data-class="one">ONE</li>
-			<li class="tabs-item disabled" data-class="two">TWO</li>
-			<li class="tabs-item disabled" data-class="three">THREE</li>
-			<li class="tabs-item result disabled" data-class="four" data-result="result">FOUR</li>
-		</ul>
+<div class="content">
+  <ul class="tabs-list">
+    <li class="tabs-item active" data-index="one">ONE</li>
+    <li class="tabs-item disabled" data-index="two">TWO</li>
+    <li class="tabs-item disabled" data-index="three">THREE</li>
+    <li class="tabs-item result disabled" data-index="four" data-result="result">RESULTS</li>
+  </ul>
 
-		<div class="tab-content active" data-class="one">
-			<h3>First container</h3>
-			<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Molestias fugiat tempora cumque consequatur reiciendis iure voluptates laborum qui beatae eligendi nesciunt labore esse, voluptatibus, molestiae dignissimos rem excepturi officiis aut?</p>
+  <div class="tab-content active" data-index="one">
+    <h3>First container</h3>
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Molestias fugiat tempora cumque consequatur reiciendis
+      iure voluptates laborum qui beatae eligendi nesciunt labore esse, voluptatibus, molestiae dignissimos rem
+      excepturi officiis aut?</p>
 
-			<div>
-				<input data-input="one-01" type="text" placeholder="Enter text">
-			</div>
+    <div>
+      <input data-input="one-01" type="text" placeholder="Enter text">
+    </div>
 
-			<div>
-				<input data-input="one-02" type="text" placeholder="Enter text">
-			</div>
+    <div>
+      <input data-input="one-02" type="text" placeholder="Enter text">
+    </div>
+  </div>
 
-			<div>
-				<input data-input="one-03" type="text" placeholder="Enter text">
-			</div>
-		</div>
-		<div class="tab-content" data-class="two">
-			<h3>Second container</h3>
-			<p>Quidem laboriosam optio molestias rem in, illum deleniti repudiandae odio quisquam ipsam, quia eveniet labore nobis quos. Perferendis maiores tempore similique reprehenderit libero. Non sed, itaque quas. Quia, accusantium, tempora.</p>
+  <div class="tab-content" data-index="two">
+    <h3>Second container</h3>
+    <p>Quidem laboriosam optio molestias rem in, illum deleniti repudiandae odio quisquam ipsam, quia eveniet labore
+      nobis quos. Perferendis maiores tempore similique reprehenderit libero. Non sed, itaque quas. Quia, accusantium,
+      tempora.</p>
 
-			<div>
-				<input data-input="two-01" type="text" placeholder="Enter text">
-			</div>
+    <div>
+      <input data-input="two-01" type="text" placeholder="Enter text">
+    </div>
 
-			<div>
-				<input data-input="two-02" type="text" placeholder="Enter text">
-			</div>
-		</div>
-		<div class="tab-content" data-class="three">
-			<h3>Third container</h3>
-			<p>Animi accusamus omnis sunt soluta quo quaerat cumque quas, ratione debitis. Harum amet, qui ea nesciunt vel, rem voluptatum corporis obcaecati ex repellat accusantium maxime numquam iusto? Nam, sed culpa!</p>
+    <div>
+      <input data-input="two-02" type="text" placeholder="Enter text">
+    </div>
+  </div>
 
-			<div>
-				<input data-input="three-01" type="text" placeholder="Enter text">
-			</div>
-		</div>
-		<div class="tab-result" data-class="four">
-			<h3>RESULTS:</h3>
-			<p id="tab-result-target"></p>
-		</div>
-	</div>
+  <div class="tab-content" data-index="three">
+    <h3>Third container</h3>
+    <p>Animi accusamus omnis sunt soluta quo quaerat cumque quas, ratione debitis. Harum amet, qui ea nesciunt vel, rem
+      voluptatum corporis obcaecati ex repellat accusantium maxime numquam iusto? Nam, sed culpa!</p>
 
-	<script src="jquery-2.1.4.min.js"></script>
-	<script src="tabs.js"></script>
+    <div>
+      <input data-input="three-01" type="text" placeholder="Enter text">
+    </div>
+  </div>
+
+  <div class="tab-result" data-index="four">
+    <h3>RESULTS:</h3>
+    <p id="tab-result-target"></p>
+  </div>
+</div>
+
+<script src="jquery-2.1.4.min.js"></script>
+<script src="tabs.js"></script>
 </body>
 </html>

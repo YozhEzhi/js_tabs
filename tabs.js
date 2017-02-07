@@ -1,18 +1,12 @@
-// Дана страница с n-вкладками.
-// На каждой вкладке набор текстовых инпутов: <input type="text">.
 // Переход на следующую вкладку возможен только после заполнения всех инпутов
-// на текущей. На последней вкладке выводится вся информация заполненная
-// на предыдущих.
+// на текущей. На последней вкладке выводится вся информация заполненная на предыдущих.
 //
-// Что большим будет плюсом:
-// 1. использование stylus (нужны исходники styl)
-// 2. табы в виде самостоятельного jquery плагина (jquery-tabs - это не интересно)
-// 3. возможность задать заполненные данные при открытии страницы (например json)
-//  3.1. ...в таком случае открывается первая не заполненная вкладка.
-//  3.2. ...соблюдается последовательность (нельзя попасть на заполненную вкладку
+// Что будет плюсом:
+// 1. табы в виде самостоятельного jquery плагина (jquery-tabs - это не интересно)
+// 2. возможность задать заполненные данные при открытии страницы (например json)
+//  2.1. ...в таком случае открывается первая не заполненная вкладка.
+//  2.2. ...соблюдается последовательность (нельзя попасть на заполненную вкладку
 // если перед ней есть незаполненная)
-//
-// На задание отводится 2-3 дня.
 
 // ================================================================
 // TODO :
@@ -20,149 +14,131 @@
 // 2. Баг при удалении первой заполненной табы: результирующая таба
 // не стает активной;
 // ================================================================
+let content = document.querySelector('.content');
+let tabsList = content.querySelector('.tabs-list'),
+  dataItems = content.querySelectorAll('[data-index]'),
+  inputs = content.querySelectorAll('input[data-input]'),
+  $tabResult = $('li[data-result="result"]'),
+  tabResultTarget = '#tab-result-target',
+  dataObj = {};
 
-;(function($) {
-    var $tabsList          = $(".tabs-list"),
-        $tabsItemsDisabled = $(".tabs-item.disabled"),
-        $tabsContent       = $(".tab-content"),
-        $tabsContentActive = $(".tab-content.active"),
-        $dataClassItems    = $("[data-class]"),
-        $dataInputs        = $("input[data-input]"),
-        $tabResult         = $("li[data-result='result']"),
-        dataObj            = {},
-        $inputsOnActiveContent,
-        tabClicked;
+const tabs = {
+  init() {
+    this.setUpListeners();
+  },
 
-    var tabs = {
-        initialize : function() {
-            tabs.setUpListeners();
-        },
+  setUpListeners() {
+    tabsList.addEventListener('click', event => this.tabsSwitch(event));
+    $tabResult.on('click', this.showResult);
+    inputs.forEach(item => item.addEventListener('keyup', event => this.inputIsFilled(event)));
+  },
 
-        setUpListeners : function() {
-            $tabsList.on("click", ".tabs-item", this.tabsSwitch);
-            // $tabResult.on("click", this.showResult);
-            $dataInputs.on("keyup", this.inputIsFilled);
-        },
+  tabsSwitch(event) {
+    const target = event.target;
+    const clickedTabId = target.dataset.index;
 
-        tabsSwitch : function() {
-            var $this = $(this);
+    if (!target.classList.contains('active') && !target.classList.contains('disabled')) {
+      this.inputsGetData();
 
-            tabClicked = $(this).data("class");
+      this.resetActiveClass();
+      this.setActiveItems(clickedTabId);
+    }
 
-            if ( !$this.hasClass("active") && !$this.hasClass("disabled") ) {
-                tabs.inputsGetData();
+    if (target.classList.contains('result')) this.showResult();
+  },
 
-                $dataClassItems.removeClass("active");
-                $("[data-class='" + tabClicked + "']").addClass("active");
-            }
+  resetActiveClass() {
+    dataItems.forEach(item => item.classList.remove('active'));
+  },
 
-            if ( $this.hasClass("result") ) {
-                tabs.showResult();
-            }
-        },
+  setActiveItems(tabId) {
+    const itemsToSetActive = Array.from(dataItems).filter(item => item.dataset.index === tabId);
+    itemsToSetActive.forEach(item => item.classList.add('active'));
+  },
 
-        inputIsFilled : function() {
-            $tabsContentActive = $(".tab-content.active");
+  inputIsFilled(event) {
+    const activeContent = content.querySelector('.tab-content.active');
+    const target = event.target;
 
-            if ( $(this).val() !== "" && $(this).val() !== " ") {
-                $(this).addClass("filled");
-                tabs.inputsAreFilles();
-            } else {
-                $(this).removeClass("filled");
-                $tabsContentActive.removeClass("content-filled");
-                tabs.tabAddDisabled();
+    if (target.value.trim()) {
+      target.classList.add('filled');
+      this.isSectionFilled();
+    } else {
+      target.classList.remove('filled');
+      activeContent.classList.remove('content-filled');
+      this.tabAddDisabled();
 
-                console.log("Input is empty");
-            }
-        },
+      console.log('Input is empty');
+    }
+  },
 
-        inputsAreFilles : function() {
-            var $tabsContentActive = $(".tab-content.active"),
-                inputsFilled       = 0,
-                inputsLen          = 0;
+  isSectionFilled() {
+    const section = content.querySelector('.tab-content.active');
+    const inputs = section.querySelectorAll('input');
+    let inputsFilled = 0;
 
-            $inputsOnActiveContent = $tabsContentActive.find("input[data-input]");
-            inputsLen = $inputsOnActiveContent.size();
-
-            for (var i = 0; i < inputsLen; i++) {
-                var inputCurVal = $inputsOnActiveContent.eq(i).val();
-
-                if ( inputCurVal !== "" && inputCurVal !== " " ) {
-                    inputsFilled++;
-                }
-            }
-
-            if ( inputsFilled === inputsLen && !$tabsContentActive.hasClass("content-filled") ) {
-                $tabsContentActive.addClass("content-filled");
-                tabs.tabsRefresh();
-            }
-        },
-
-        inputsGetData : function() {
-            var $tabsItemActive    = $(".tabs-item.active").not(".result"),
-                $tabsContentActive = $(".tab-content.active"),
-                inputCurrId        = $tabsItemActive.data("class"),
-                inputsLen          = 0,
-                inputCurrData      = {};
-
-            if( inputCurrId ) {
-                $inputsOnActiveContent = $tabsContentActive.find("input[data-input]");
-                inputsLen = $inputsOnActiveContent.size();
-
-                for (var i = 0; i < inputsLen; i++) {
-                    inputCurrData[ $inputsOnActiveContent.eq(i).data("input") ] = $inputsOnActiveContent.eq(i).val();
-                }
-
-                dataObj[inputCurrId] = inputCurrData;
-            }
-        },
-
-        tabAddDisabled : function() {
-            $(".tabs-item.active").nextAll().addClass("disabled");
-        },
-
-        tabsRefresh : function() {
-            $tabsItemsDisabled = $(".tabs-item.disabled");
-            $tabsItemsDisabled.first().removeClass("disabled");
-        },
-
-        showResult : function() {
-            var resultHTML = "",
-                objKeys = Object.getOwnPropertyNames(dataObj),
-                i = 0,
-                y = 1,
-                tabContentToFill,
-                tabContentData;
-
-            if ( !$(this).hasClass("disabled") && !$(this).hasClass("active")) {
-                for (var property in dataObj) {
-                    if (dataObj.hasOwnProperty(property)) {
-                        tabContentToFill = dataObj[property];
-
-                        resultHTML += "<p><strong>Tab " + objKeys[i] + ":</strong></p>";
-                        i++;
-
-                        for (var subproperty in tabContentToFill) {
-                            if (tabContentToFill.hasOwnProperty(subproperty)) {
-                                tabContentData = tabContentToFill[subproperty];
-
-                                resultHTML += "<p>Input " + y + ": <em>" + tabContentData + "</em></p>";
-                                y++;
-                            }
-                        }
-                    }
-                }
-
-                $("#tab-result-target").append( "<p>JSON is: " + JSON.stringify( dataObj, "", 4 ) + "</p>");
-                $("#tab-result-target").append( resultHTML );
-            }
-        }
-    };
-
-    // Module init:
-    tabs.initialize();
-
-    $(function () {
-
+    inputs.forEach((item) => {
+      if (item.value.trim()) inputsFilled++;
     });
-})(jQuery);
+
+    if (inputsFilled === inputs.length && !section.classList.contains('content-filled')) {
+      section.classList.add('content-filled');
+      this.refreshTabs();
+    }
+  },
+
+  inputsGetData() {
+    const section = content.querySelector('.tabs-item.active:not(.result)');
+    const sectionIndex = section.dataset.index;
+    const activeInputs = content.querySelectorAll('.tab-content.active input');
+    let inputData = {};
+
+    if (!sectionIndex) return;
+
+    activeInputs.forEach(item => inputData[item.dataset.input] = item.value);
+    dataObj[sectionIndex] = inputData;
+  },
+
+  tabAddDisabled() {
+    $('.tabs-item.active').nextAll().addClass('disabled');
+  },
+
+  refreshTabs() {
+    const $tabsItemsDisabled = $('.tabs-item.disabled');
+    $tabsItemsDisabled.first().removeClass('disabled');
+  },
+
+  showResult() {
+    let resultHTML = '',
+      objKeys = Object.getOwnPropertyNames(dataObj),
+      i = 0,
+      y = 1,
+      tabContentToFill,
+      tabContentData;
+
+    if (!$(this).hasClass('disabled') && !$(this).hasClass('active')) {
+      for (let property in dataObj) {
+        if (dataObj.hasOwnProperty(property)) {
+          tabContentToFill = dataObj[property];
+
+          resultHTML += '<p><strong>Tab ' + objKeys[i] + ':</strong></p>';
+          i++;
+
+          for (let subProp in tabContentToFill) {
+            if (tabContentToFill.hasOwnProperty(subProp)) {
+              tabContentData = tabContentToFill[subProp];
+
+              resultHTML += '<p>Input ' + y + ': <em>' + tabContentData + '</em></p>';
+              y++;
+            }
+          }
+        }
+      }
+
+      $(tabResultTarget).append('<p>JSON is: ' + JSON.stringify(dataObj, '', 4) +'</p>');
+      $(tabResultTarget).append(resultHTML);
+    }
+  }
+};
+
+tabs.init();
