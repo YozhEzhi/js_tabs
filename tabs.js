@@ -9,17 +9,15 @@
 // если перед ней есть незаполненная)
 
 // ================================================================
-// TODO :
-// 1. Допилить showResult();
-// 2. Баг при удалении первой заполненной табы: результирующая таба
+// TODO:
+// 1. Баг при удалении первой заполненной табы: результирующая таба
 // не стает активной;
 // ================================================================
 let content = document.querySelector('.content');
 let tabsList = content.querySelector('.tabs-list'),
   dataItems = content.querySelectorAll('[data-index]'),
   inputs = content.querySelectorAll('input[data-input]'),
-  $tabResult = $('li[data-result="result"]'),
-  tabResultTarget = '#tab-result-target',
+  resultSection = content.querySelector('#result-section'),
   dataObj = {};
 
 const tabs = {
@@ -29,7 +27,6 @@ const tabs = {
 
   setUpListeners() {
     tabsList.addEventListener('click', event => this.tabsSwitch(event));
-    $tabResult.on('click', this.showResult);
     inputs.forEach(item => item.addEventListener('keyup', event => this.inputIsFilled(event)));
   },
 
@@ -38,13 +35,12 @@ const tabs = {
     const clickedTabId = target.dataset.index;
 
     if (!target.classList.contains('active') && !target.classList.contains('disabled')) {
-      this.inputsGetData();
-
+      this.storeInputData();
       this.resetActiveClass();
       this.setActiveItems(clickedTabId);
     }
 
-    if (target.classList.contains('result')) this.showResult();
+    if (target.classList.contains('result')) this.showResult(target);
   },
 
   resetActiveClass() {
@@ -57,7 +53,6 @@ const tabs = {
   },
 
   inputIsFilled(event) {
-    const activeContent = content.querySelector('.tab-content.active');
     const target = event.target;
 
     if (target.value.trim()) {
@@ -65,10 +60,7 @@ const tabs = {
       this.isSectionFilled();
     } else {
       target.classList.remove('filled');
-      activeContent.classList.remove('content-filled');
       this.tabAddDisabled();
-
-      console.log('Input is empty');
     }
   },
 
@@ -81,63 +73,61 @@ const tabs = {
       if (item.value.trim()) inputsFilled++;
     });
 
-    if (inputsFilled === inputs.length && !section.classList.contains('content-filled')) {
-      section.classList.add('content-filled');
+    if (inputsFilled === inputs.length) {
       this.refreshTabs();
     }
   },
 
-  inputsGetData() {
-    const section = content.querySelector('.tabs-item.active:not(.result)');
+  storeInputData() {
+    const section = content.querySelector('.tabs-item.active');
     const sectionIndex = section.dataset.index;
     const activeInputs = content.querySelectorAll('.tab-content.active input');
     let inputData = {};
 
     if (!sectionIndex) return;
-
     activeInputs.forEach(item => inputData[item.dataset.input] = item.value);
     dataObj[sectionIndex] = inputData;
   },
 
   tabAddDisabled() {
-    $('.tabs-item.active').nextAll().addClass('disabled');
+    const activeTab = content.querySelector('.tabs-item.active');
+    const siblings = [].filter.call(activeTab.parentNode.children, item => item !== activeTab);
+    siblings.forEach(item => item.classList.add('disabled'));
   },
 
   refreshTabs() {
-    const $tabsItemsDisabled = $('.tabs-item.disabled');
-    $tabsItemsDisabled.first().removeClass('disabled');
+    const disabledTabs = content.querySelectorAll('.tabs-item.disabled');
+    disabledTabs[0].classList.remove('disabled');
   },
 
-  showResult() {
-    let resultHTML = '',
-      objKeys = Object.getOwnPropertyNames(dataObj),
-      i = 0,
-      y = 1,
-      tabContentToFill,
-      tabContentData;
+  showResult(target) {
+    let index = 1;
+    let resultHTML;
 
-    if (!$(this).hasClass('disabled') && !$(this).hasClass('active')) {
-      for (let property in dataObj) {
-        if (dataObj.hasOwnProperty(property)) {
-          tabContentToFill = dataObj[property];
+    if (target.classList.contains('disabled')) return;
+    for (let prop in dataObj) {
+      if (dataObj.hasOwnProperty(prop)) {
+        const dataObjProp = dataObj[prop];
+        resultHTML += `<hr><br><p><strong>Tab ${prop}:</strong></p>`;
 
-          resultHTML += '<p><strong>Tab ' + objKeys[i] + ':</strong></p>';
-          i++;
-
-          for (let subProp in tabContentToFill) {
-            if (tabContentToFill.hasOwnProperty(subProp)) {
-              tabContentData = tabContentToFill[subProp];
-
-              resultHTML += '<p>Input ' + y + ': <em>' + tabContentData + '</em></p>';
-              y++;
-            }
+        for (let subProp in dataObjProp) {
+          if (dataObjProp.hasOwnProperty(subProp)) {
+            resultHTML += `<p>Input #${index}: ${dataObjProp[subProp]}</p>`;
+            index++;
           }
         }
       }
-
-      $(tabResultTarget).append('<p>JSON is: ' + JSON.stringify(dataObj, '', 4) +'</p>');
-      $(tabResultTarget).append(resultHTML);
     }
+
+    resultSection.innerHTML = `
+      <hr>
+      <br>
+      <p><strong>JSON is:</strong></p>
+      <p>${JSON.stringify(dataObj, null, ' ')}</p>
+      <br>
+      ${resultHTML}
+      <br>
+    `;
   }
 };
 
