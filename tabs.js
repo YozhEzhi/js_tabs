@@ -1,36 +1,21 @@
-// Переход на следующую вкладку возможен только после заполнения всех инпутов
-// на текущей. На последней вкладке выводится вся информация заполненная на предыдущих.
-//
-// Что будет плюсом:
-// 1. табы в виде самостоятельного jquery плагина (jquery-tabs - это не интересно)
-// 2. возможность задать заполненные данные при открытии страницы (например json)
-//  2.1. ...в таком случае открывается первая не заполненная вкладка.
-//  2.2. ...соблюдается последовательность (нельзя попасть на заполненную вкладку
-// если перед ней есть незаполненная)
-
 // ================================================================
 // TODO:
-// 1. Баг при удалении первой заполненной табы: результирующая таба
-// не стает активной;
+// 1. Баг при переходе на предыдущую заполненную табу
 // ================================================================
 let content = document.querySelector('.content');
-let tabsList = content.querySelector('.tabs-list'),
-  dataItems = content.querySelectorAll('[data-index]'),
-  inputs = content.querySelectorAll('input[data-input]'),
-  resultSection = content.querySelector('#result-section'),
-  dataObj = {};
+let tabsList = content.querySelector('.tabs-list');
+let dataItems = content.querySelectorAll('[data-index]');
+let inputs = content.querySelectorAll('input[data-input]');
+let resultSection = content.querySelector('#result-section');
+let dataObj = {};
 
 const tabs = {
   init() {
-    this.setUpListeners();
+    tabsList.addEventListener('click', () => this.tabsSwitch());
+    inputs.forEach(item => item.addEventListener('keyup', () => this.inputIsFilled()));
   },
 
-  setUpListeners() {
-    tabsList.addEventListener('click', event => this.tabsSwitch(event));
-    inputs.forEach(item => item.addEventListener('keyup', event => this.inputIsFilled(event)));
-  },
-
-  tabsSwitch(event) {
+  tabsSwitch() {
     const target = event.target;
     const clickedTabId = target.dataset.index;
 
@@ -52,7 +37,7 @@ const tabs = {
     itemsToSetActive.forEach(item => item.classList.add('active'));
   },
 
-  inputIsFilled(event) {
+  inputIsFilled() {
     const target = event.target;
 
     if (target.value.trim()) {
@@ -65,17 +50,19 @@ const tabs = {
   },
 
   isSectionFilled() {
+    let inputsFilled = 0;
     const section = content.querySelector('.tab-content.active');
     const inputs = section.querySelectorAll('input');
-    let inputsFilled = 0;
+    const currentTab = content.querySelector('.tabs-item.active');
+    const nextTab = currentTab.nextElementSibling;
+    const isDisabled = nextTab.classList.contains('disabled');
 
     inputs.forEach((item) => {
       if (item.value.trim()) inputsFilled++;
     });
 
-    if (inputsFilled === inputs.length) {
-      this.refreshTabs();
-    }
+    if (inputsFilled !== inputs.length || !isDisabled) return;
+    nextTab.classList.remove('disabled');
   },
 
   storeInputData() {
@@ -95,14 +82,9 @@ const tabs = {
     siblings.forEach(item => item.classList.add('disabled'));
   },
 
-  refreshTabs() {
-    const disabledTabs = content.querySelectorAll('.tabs-item.disabled');
-    disabledTabs[0].classList.remove('disabled');
-  },
-
   showResult(target) {
     let index = 1;
-    let resultHTML;
+    let resultHTML = '';
 
     if (target.classList.contains('disabled')) return;
     for (let prop in dataObj) {
@@ -123,7 +105,7 @@ const tabs = {
       <hr>
       <br>
       <p><strong>JSON is:</strong></p>
-      <p>${JSON.stringify(dataObj, null, ' ')}</p>
+      <p><code>${JSON.stringify(dataObj, null, ' ')}</code></p>
       <br>
       ${resultHTML}
       <br>
